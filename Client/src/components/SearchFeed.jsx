@@ -11,17 +11,22 @@ const SearchFeed = () => {
 
   useEffect(() => {
     fetchFromAPI(`search?part=snippet&q=${searchTerm}`)
-      .then((data) => setVideos(data.items))
+      .then((data) => setVideos(data.items || []));
   }, [searchTerm]);
 
   return (
-    <Box p={2} minHeight="95vh">
-      <Typography variant="h4" fontWeight={900}  color="white" mb={3} ml={{ sm: "100px"}}>
-        Search Results for <span style={{ color: "#FC1503" }}>{searchTerm}</span> videos
+    <Box p={{ xs: 2, md: 4 }} minHeight="95vh" sx={{ backgroundColor: "#0A0C10" }}>
+      <Typography
+        variant="h4"
+        fontWeight="800"
+        color="white"
+        mb={3}
+        sx={{ fontSize: { xs: "20px", md: "26px" }, letterSpacing: "-0.5px" }}
+      >
+        Search Results for <span style={{ color: "#FF1E42" }}>"{searchTerm}"</span>
       </Typography>
-      <Box display="flex">
-        <Box sx={{ mr: { sm: '100px' } }}/>
-        {<Videos videos={videos} />}
+      <Box width="100%">
+        <Videos videos={videos} />
       </Box>
     </Box>
   );

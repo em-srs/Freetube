@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
-import { Paper, IconButton } from '@mui/material';
+import { Box, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 
 const SearchBar = () => {
@@ -10,35 +10,40 @@ const SearchBar = () => {
   const onhandleSubmit = (e) => {
     e.preventDefault();
 
-    if (searchTerm) {
-      navigate(`/search/${searchTerm}`);
-
+    if (searchTerm.trim()) {
+      navigate(`/search/${encodeURIComponent(searchTerm.trim())}`);
       setSearchTerm('');
     }
   };
 
   return (
-    <Paper
-      component='form'
+    <Box
+      component="form"
       onSubmit={onhandleSubmit}
-      sx={{
-        borderRadius: 20,
-        border: '1px solid #e3e3e3',
-        pl: 2,
-        boxShadow: 'none',
-        mr: { sm: 5 },
-      }}
+      className="search-bar-container"
     >
       <input
-        className='search-bar'
-        placeholder='Search...'
+        className="search-input"
+        placeholder="Search videos, channels, topics..."
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
-      <IconButton type='submit' sx={{ p: '10px', color: 'red' }} aria-label='search'>
-        <SearchIcon />
+      <IconButton
+        type="submit"
+        sx={{
+          p: '6px',
+          color: '#FF1E42',
+          transition: 'all 0.2s ease',
+          '&:hover': {
+            transform: 'scale(1.1)',
+            backgroundColor: 'rgba(255, 30, 66, 0.1)',
+          },
+        }}
+        aria-label="search"
+      >
+        <SearchIcon fontSize="small" />
       </IconButton>
-    </Paper>
+    </Box>
   );
 };
 
