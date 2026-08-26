@@ -36,7 +36,7 @@ const Feed = () => {
           variant="body2"
           sx={{ mt: 1.5, color: "#64748B", fontSize: "12px", textAlign: "center" }}
         >
-          © 2026 Vision Hub Platform
+          © 2026 FreeTube Platform
         </Typography>
       </Box>
 

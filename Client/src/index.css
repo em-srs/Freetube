@@ -224,7 +224,8 @@ a {
 }
 
 .react-player {
-  height: 72vh !important;
+  height: 55vh !important;
+  max-height: 560px !important;
   width: 100% !important;
 }
 
