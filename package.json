@@ -1,0 +1,9 @@
+{
+  "name": "vision-hub",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "npm --prefix Client start",
+    "build": "npm --prefix Client run build"
+  }
+}
