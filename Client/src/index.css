@@ -269,6 +269,15 @@ a {
   animation: pulseGlow 1.5s infinite;
 }
 
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 1s linear infinite;
+}
+
 /* Responsive Media Queries */
 @media screen and (max-width: 900px) {
   .category-btn {
