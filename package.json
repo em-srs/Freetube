@@ -4,6 +4,7 @@
   "private": true,
   "scripts": {
     "start": "npm --prefix Client start",
-    "build": "npm --prefix Client run build"
+    "postinstall": "npm --prefix Client install --legacy-peer-deps",
+    "build": "npm --prefix Client install --legacy-peer-deps && npm --prefix Client run build"
   }
 }
