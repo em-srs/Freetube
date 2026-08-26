@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { useNavigate } from "react-router-dom";
 import { Paper, IconButton } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import { trackSearch } from '../utils/recommendationEngine';
 
 const SearchBar = () => {
   const [searchTerm, setSearchTerm] = useState('');
@@ -10,9 +11,9 @@ const SearchBar = () => {
   const onhandleSubmit = (e) => {
     e.preventDefault();
 
-    if (searchTerm) {
-      navigate(`/search/${searchTerm}`);
-
+    if (searchTerm.trim()) {
+      trackSearch(searchTerm.trim());
+      navigate(`/search/${encodeURIComponent(searchTerm.trim())}`);
       setSearchTerm('');
     }
   };
@@ -26,12 +27,12 @@ const SearchBar = () => {
         border: '1px solid #e3e3e3',
         pl: 2,
         boxShadow: 'none',
-        mr: { sm: 5 },
+        mr: { sm: 1 },
       }}
     >
       <input
         className='search-bar'
-        placeholder='Search...'
+        placeholder='Search Indian videos & topics...'
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />

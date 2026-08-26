@@ -1,7 +1,18 @@
 import React from "react";
-import { Stack } from "@mui/material";
+import { Stack, Divider } from "@mui/material";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
+import HistoryIcon from "@mui/icons-material/History";
+import ThumbUpIcon from "@mui/icons-material/ThumbUp";
+import BookmarkIcon from "@mui/icons-material/Bookmark";
 
 import { categories } from "../utils/constants";
+
+const PERSONALIZED_NAV = [
+  { name: "Recommended", icon: <AutoAwesomeIcon /> },
+  { name: "Watch History", icon: <HistoryIcon /> },
+  { name: "Liked Videos", icon: <ThumbUpIcon /> },
+  { name: "Saved Videos", icon: <BookmarkIcon /> },
+];
 
 const Categories = ({ selectedCategory, setSelectedCategory }) => (
   <Stack
@@ -12,6 +23,30 @@ const Categories = ({ selectedCategory, setSelectedCategory }) => (
       flexDirection: { md: "column" },
     }}
   >
+    {/* Personalized Nav Options */}
+    {PERSONALIZED_NAV.map((nav) => (
+      <button
+        className="category-btn"
+        onClick={() => setSelectedCategory(nav.name)}
+        style={{
+          background: nav.name === selectedCategory && "#FC1503",
+          color: "white",
+          fontWeight: nav.name === selectedCategory ? "bold" : "normal",
+        }}
+        key={nav.name}
+      >
+        <span style={{ color: nav.name === selectedCategory ? "white" : "#FC1503", marginRight: "15px" }}>
+          {nav.icon}
+        </span>
+        <span style={{ opacity: nav.name === selectedCategory ? "1" : "0.9" }}>
+          {nav.name}
+        </span>
+      </button>
+    ))}
+
+    <Divider sx={{ my: 1, borderColor: "#3d3d3d", display: { xs: "none", md: "block" } }} />
+
+    {/* Standard Regional Categories */}
     {categories.map((category) => (
       <button
         className="category-btn"
