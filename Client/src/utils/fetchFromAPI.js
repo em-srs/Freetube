@@ -2,10 +2,9 @@ import axios from 'axios';
 
 export const BASE_URL = 'https://youtube-v31.p.rapidapi.com';
 
-const defaultOptions = {
+const options = {
   params: {
     maxResults: 50,
-    regionCode: 'IN',
   },
   headers: {
     'X-RapidAPI-Key': process.env.REACT_APP_RAPID_API_KEY,
@@ -13,14 +12,7 @@ const defaultOptions = {
   },
 };
 
-export const fetchFromAPI = async (url, customParams = {}) => {
-  const options = {
-    ...defaultOptions,
-    params: {
-      ...defaultOptions.params,
-      ...customParams,
-    },
-  };
+export const fetchFromAPI = async (url) => {
   const { data } = await axios.get(`${BASE_URL}/${url}`, options);
 
   return data;
