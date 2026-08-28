@@ -4,7 +4,7 @@ import { Stack, Box } from "@mui/material";
 import { ChannelCard, Loader, VideoCard } from "./";
 import { enrichVideosWithDetails } from "../utils/formatDuration";
 
-const Videos = ({ videos, direction }) => {
+const Videos = ({ videos, direction, isShortsFeed }) => {
   const [enrichedVideos, setEnrichedVideos] = useState(videos);
 
   useEffect(() => {
@@ -31,7 +31,7 @@ const Videos = ({ videos, direction }) => {
       <Stack direction="column" gap={2} width="100%">
         {enrichedVideos.map((item, idx) => (
           <Box key={idx} width="100%">
-            {item.id?.videoId && <VideoCard video={item} />}
+            {item.id?.videoId && <VideoCard video={item} isShortsFeed={isShortsFeed} />}
             {item.id?.channelId && <ChannelCard channelDetail={item} />}
           </Box>
         ))}
@@ -40,10 +40,10 @@ const Videos = ({ videos, direction }) => {
   }
 
   return (
-    <div className="videos-grid">
+    <div className={isShortsFeed ? "shorts-grid" : "videos-grid"}>
       {enrichedVideos.map((item, idx) => (
         <Box key={idx} width="100%">
-          {item.id?.videoId && <VideoCard video={item} />}
+          {item.id?.videoId && <VideoCard video={item} isShortsFeed={isShortsFeed} />}
           {item.id?.channelId && <ChannelCard channelDetail={item} />}
         </Box>
       ))}

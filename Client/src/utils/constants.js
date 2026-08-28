@@ -12,6 +12,7 @@ import GraphicEqIcon from "@mui/icons-material/GraphicEq";
 import TheaterComedyIcon from "@mui/icons-material/TheaterComedy";
 import FitnessCenterIcon from "@mui/icons-material/FitnessCenter";
 import DeveloperModeIcon from "@mui/icons-material/DeveloperMode";
+import BoltIcon from "@mui/icons-material/Bolt";
 
 import freetubeLogo from "../assets/logo.jpg";
 
@@ -19,6 +20,7 @@ export const logo = freetubeLogo;
 
 export const categories = [
   { name: "New", icon: <HomeIcon /> },
+  { name: "Shorts", icon: <BoltIcon /> },
   { name: "Shopping", icon: <ShoppingCartIcon /> },
   { name: "Coding", icon: <DeveloperModeIcon /> },
   { name: "News", icon: <LiveTvIcon /> },

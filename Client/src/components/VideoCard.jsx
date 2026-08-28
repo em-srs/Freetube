@@ -4,11 +4,13 @@ import { Typography, Card, CardContent, Box } from "@mui/material";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 
 import { demoThumbnailUrl, demoVideoUrl, demoVideoTitle, demoChannelUrl, demoChannelTitle } from "../utils/constants";
-import { formatDuration } from "../utils/formatDuration";
+import { formatDuration, isShortVideo } from "../utils/formatDuration";
+import BoltIcon from "@mui/icons-material/Bolt";
 
-const VideoCard = ({ video: { id: { videoId }, snippet, contentDetails } }) => {
+const VideoCard = ({ video: { id: { videoId }, snippet, contentDetails }, isShortsFeed }) => {
   const isLive = snippet?.liveBroadcastContent === 'live';
   const durationText = formatDuration(contentDetails?.duration);
+  const isShort = isShortsFeed || isShortVideo(contentDetails?.duration, snippet?.title);
 
   return (
     <Card
@@ -24,14 +26,18 @@ const VideoCard = ({ video: { id: { videoId }, snippet, contentDetails } }) => {
       }}
     >
       <Link to={videoId ? `/video/${videoId}` : `/video/cV2gBU6hKfY` }>
-        <Box className="thumbnail-wrapper">
+        <Box className={`thumbnail-wrapper ${isShort ? "shorts-thumbnail" : ""}`}>
           <img
             src={snippet?.thumbnails?.high?.url || snippet?.thumbnails?.medium?.url || demoThumbnailUrl}
             alt={snippet?.title}
             className="thumbnail-img"
             loading="lazy"
           />
-          {isLive ? (
+          {isShort ? (
+            <Box className="video-badge shorts-badge" sx={{ display: "flex", alignItems: "center", gap: "2px" }}>
+              <BoltIcon sx={{ fontSize: "12px" }} /> SHORTS
+            </Box>
+          ) : isLive ? (
             <Box className="video-badge live-badge">
               LIVE
             </Box>

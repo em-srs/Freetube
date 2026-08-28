@@ -1,12 +1,16 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { Box, Stack, Typography, Button } from "@mui/material";
+import { Box, Stack, Typography, Button, ToggleButtonGroup, ToggleButton } from "@mui/material";
 import RefreshIcon from "@mui/icons-material/Refresh";
+import BoltIcon from "@mui/icons-material/Bolt";
+import OndemandVideoIcon from "@mui/icons-material/OndemandVideo";
+import PublicIcon from "@mui/icons-material/Public";
 
 import { fetchFromAPI } from "../utils/fetchFromAPI";
 import { Videos, Sidebar } from "./";
 
 const categoryKeywords = {
   "New": ["New videos", "Trending videos 2026", "Viral content", "Latest uploads", "Popular Youtube videos"],
+  "Shorts": ["YouTube Shorts viral", "Trending Shorts 2026", "Funny Shorts", "Tech Shorts", "Gaming Shorts", "Coding Shorts"],
   "Coding": ["Coding tutorials", "Web Development", "JavaScript React", "Python programming", "Software engineering", "Full stack development"],
   "Gaming": ["Gaming highlights", "Live gaming", "Gameplay 2026", "Top games", "Esports matches"],
   "Music": ["Top Music Hits 2026", "Trending Songs", "Live concerts", "Official Music Videos", "Acoustic covers"],
@@ -33,23 +37,45 @@ const getRandomQuery = (category) => {
 
 const Feed = () => {
   const [selectedCategory, setSelectedCategory] = useState("New");
+  const [feedFilter, setFeedFilter] = useState("videos"); // "videos" | "shorts" | "all"
   const [videos, setVideos] = useState(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
-  const fetchCategoryFeed = useCallback((category) => {
+  const fetchCategoryFeed = useCallback((category, filter) => {
     setVideos(null);
     setIsRefreshing(true);
 
-    const query = getRandomQuery(category);
-    
-    // Pick dynamic ordering (relevance vs date vs rating)
+    let query = getRandomQuery(category);
+    if (category === "Shorts" || filter === "shorts") {
+      if (!query.toLowerCase().includes("shorts")) {
+        query = `#shorts ${query}`;
+      }
+    }
+
     const orders = ['relevance', 'date', 'rating'];
     const randomOrder = orders[Math.floor(Math.random() * orders.length)];
 
-    fetchFromAPI(`search?part=snippet&q=${encodeURIComponent(query)}`, { order: randomOrder })
+    let endpoint = `search?part=snippet&q=${encodeURIComponent(query)}`;
+    if (category === "Shorts" || filter === "shorts") {
+      endpoint += `&videoDuration=short`;
+    } else if (filter === "videos") {
+      endpoint += `&videoDuration=medium`;
+    }
+
+    fetchFromAPI(endpoint, { order: randomOrder })
       .then((data) => {
         let items = data.items || [];
-        // Fisher-Yates light shuffle to ensure dynamic order on every refresh
+
+        // Apply client-side filter
+        if (filter === "videos" && category !== "Shorts") {
+          // Exclude title with #shorts or shorts tag
+          items = items.filter(item => !/#shorts?|#short\b/i.test(item.snippet?.title || ""));
+        } else if (filter === "shorts" || category === "Shorts") {
+          // Ensure items match shorts query or stay in shorts view
+          items = items.filter(item => item.id?.videoId);
+        }
+
+        // Fisher-Yates light shuffle
         items = [...items].sort(() => Math.random() - 0.5);
         setVideos(items);
       })
@@ -58,12 +84,29 @@ const Feed = () => {
   }, []);
 
   useEffect(() => {
-    fetchCategoryFeed(selectedCategory);
-  }, [selectedCategory, fetchCategoryFeed]);
+    const currentFilter = selectedCategory === "Shorts" ? "shorts" : feedFilter;
+    if (selectedCategory === "Shorts" && feedFilter !== "shorts") {
+      setFeedFilter("shorts");
+    }
+    fetchCategoryFeed(selectedCategory, currentFilter);
+  }, [selectedCategory, feedFilter, fetchCategoryFeed]);
 
   const handleRefresh = () => {
-    fetchCategoryFeed(selectedCategory);
+    fetchCategoryFeed(selectedCategory, feedFilter);
   };
+
+  const handleFilterChange = (event, newFilter) => {
+    if (newFilter !== null) {
+      setFeedFilter(newFilter);
+      if (newFilter === "shorts" && selectedCategory !== "Shorts") {
+        // Keep category or keep context
+      } else if (newFilter !== "shorts" && selectedCategory === "Shorts") {
+        setSelectedCategory("New");
+      }
+    }
+  };
+
+  const isShortsView = selectedCategory === "Shorts" || feedFilter === "shorts";
 
   return (
     <Stack sx={{ flexDirection: { sx: "column", md: "row" }, backgroundColor: "#0A0C10", minHeight: "92vh" }}>
@@ -100,36 +143,82 @@ const Feed = () => {
               letterSpacing: "-0.5px",
             }}
           >
-            {selectedCategory} <span style={{ color: "#FF1E42" }}>Videos</span>
+            {selectedCategory} <span style={{ color: "#FF1E42" }}>{isShortsView ? "Shorts ⚡" : "Videos"}</span>
           </Typography>
 
-          <Button
-            onClick={handleRefresh}
-            disabled={isRefreshing}
-            startIcon={<RefreshIcon className={isRefreshing ? "spin-icon" : ""} />}
-            sx={{
-              backgroundColor: "rgba(255, 30, 66, 0.12)",
-              color: "#FF1E42",
-              border: "1px solid rgba(255, 30, 66, 0.3)",
-              borderRadius: "20px",
-              px: 2.5,
-              py: 0.8,
-              fontSize: "13px",
-              fontWeight: 700,
-              textTransform: "none",
-              transition: "all 0.3s ease",
-              "&:hover": {
-                backgroundColor: "#FF1E42",
-                color: "#FFFFFF",
-                boxShadow: "0 0 16px rgba(255, 30, 66, 0.4)",
-              },
-            }}
-          >
-            Refresh Feed
-          </Button>
+          <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap">
+            {/* Feed Type Filter Buttons */}
+            <ToggleButtonGroup
+              value={feedFilter}
+              exclusive
+              onChange={handleFilterChange}
+              size="small"
+              sx={{
+                backgroundColor: "rgba(255, 255, 255, 0.04)",
+                border: "1px solid rgba(255, 255, 255, 0.08)",
+                borderRadius: "20px",
+                p: "3px",
+                "& .MuiToggleButton-root": {
+                  color: "#94A3B8",
+                  border: "none",
+                  borderRadius: "16px",
+                  px: 2,
+                  py: 0.5,
+                  fontSize: "12px",
+                  fontWeight: 700,
+                  textTransform: "none",
+                  "&.Mui-selected": {
+                    backgroundColor: "linear-gradient(135deg, #ff1e42 0%, #ff523b 100%)",
+                    background: "#FF1E42",
+                    color: "#FFFFFF",
+                    boxShadow: "0 2px 10px rgba(255, 30, 66, 0.3)",
+                  },
+                  "&:hover": {
+                    backgroundColor: "rgba(255, 255, 255, 0.08)",
+                    color: "#FFFFFF",
+                  },
+                },
+              }}
+            >
+              <ToggleButton value="videos">
+                <OndemandVideoIcon sx={{ fontSize: "14px", mr: 0.5 }} /> Main Videos
+              </ToggleButton>
+              <ToggleButton value="shorts">
+                <BoltIcon sx={{ fontSize: "14px", mr: 0.5, color: feedFilter === "shorts" ? "#fff" : "#FF1E42" }} /> Shorts
+              </ToggleButton>
+              <ToggleButton value="all">
+                <PublicIcon sx={{ fontSize: "14px", mr: 0.5 }} /> All
+              </ToggleButton>
+            </ToggleButtonGroup>
+
+            <Button
+              onClick={handleRefresh}
+              disabled={isRefreshing}
+              startIcon={<RefreshIcon className={isRefreshing ? "spin-icon" : ""} />}
+              sx={{
+                backgroundColor: "rgba(255, 30, 66, 0.12)",
+                color: "#FF1E42",
+                border: "1px solid rgba(255, 30, 66, 0.3)",
+                borderRadius: "20px",
+                px: 2.5,
+                py: 0.8,
+                fontSize: "13px",
+                fontWeight: 700,
+                textTransform: "none",
+                transition: "all 0.3s ease",
+                "&:hover": {
+                  backgroundColor: "#FF1E42",
+                  color: "#FFFFFF",
+                  boxShadow: "0 0 16px rgba(255, 30, 66, 0.4)",
+                },
+              }}
+            >
+              Refresh
+            </Button>
+          </Stack>
         </Stack>
 
-        <Videos videos={videos} />
+        <Videos videos={videos} isShortsFeed={isShortsView} />
       </Box>
     </Stack>
   );

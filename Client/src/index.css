@@ -269,6 +269,24 @@ a {
   animation: pulseGlow 1.5s infinite;
 }
 
+.shorts-badge {
+  background: linear-gradient(135deg, #ff1e42 0%, #ff523b 100%);
+  color: #ffffff;
+  box-shadow: 0 0 12px rgba(255, 30, 66, 0.5);
+  font-weight: 800;
+}
+
+.shorts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 20px;
+  width: 100%;
+}
+
+.shorts-thumbnail {
+  aspect-ratio: 9 / 16 !important;
+}
+
 @keyframes spin {
   from { transform: rotate(0deg); }
   to { transform: rotate(360deg); }
