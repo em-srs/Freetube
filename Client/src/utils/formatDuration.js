@@ -38,52 +38,49 @@ export const isShortVideo = (isoDuration, title = '') => {
   return totalSeconds > 0 && totalSeconds <= 60;
 };
 
+const detailsCacheMap = new Map();
+
 // Batch fetches contentDetails (duration) and live status for a list of video items
 export const enrichVideosWithDetails = async (videoList) => {
   if (!videoList || !Array.isArray(videoList) || videoList.length === 0) {
     return videoList;
   }
 
-  // Extract video IDs from items that have videoId and missing contentDetails
+  // Extract video IDs from items that have videoId, missing contentDetails, and not yet cached
   const videoIdsToFetch = videoList
-    .filter(item => item?.id?.videoId && !item.contentDetails?.duration)
+    .filter(item => item?.id?.videoId && !item.contentDetails?.duration && !detailsCacheMap.has(item.id.videoId))
     .map(item => item.id.videoId);
 
-  if (videoIdsToFetch.length === 0) {
-    return videoList;
-  }
-
-  try {
-    // YouTube API allows comma-separated IDs in a single batch request
-    const idsParam = videoIdsToFetch.join(',');
-    const detailsData = await fetchFromAPI(`videos?part=contentDetails,snippet&id=${idsParam}`);
-    
-    if (!detailsData?.items) return videoList;
-
-    // Create a lookup map of id -> detail
-    const detailsMap = new Map();
-    detailsData.items.forEach(detail => {
-      detailsMap.set(detail.id, detail);
-    });
-
-    // Merge contentDetails and liveBroadcastContent into original video items
-    return videoList.map(item => {
-      const vId = item?.id?.videoId;
-      if (vId && detailsMap.has(vId)) {
-        const detail = detailsMap.get(vId);
-        return {
-          ...item,
-          contentDetails: detail.contentDetails,
-          snippet: {
-            ...item.snippet,
-            liveBroadcastContent: detail.snippet?.liveBroadcastContent || item.snippet?.liveBroadcastContent,
-          },
-        };
+  if (videoIdsToFetch.length > 0) {
+    try {
+      // YouTube API allows comma-separated IDs in a single batch request
+      const idsParam = videoIdsToFetch.join(',');
+      const detailsData = await fetchFromAPI(`videos?part=contentDetails,snippet&id=${idsParam}`);
+      
+      if (detailsData?.items) {
+        detailsData.items.forEach(detail => {
+          detailsCacheMap.set(detail.id, detail);
+        });
       }
-      return item;
-    });
-  } catch (err) {
-    console.error('Error enriching video details:', err);
-    return videoList;
+    } catch (err) {
+      console.error('Error enriching video details:', err);
+    }
   }
+
+  // Merge contentDetails and liveBroadcastContent into original video items
+  return videoList.map(item => {
+    const vId = item?.id?.videoId;
+    if (vId && detailsCacheMap.has(vId)) {
+      const detail = detailsCacheMap.get(vId);
+      return {
+        ...item,
+        contentDetails: item.contentDetails?.duration ? item.contentDetails : detail.contentDetails,
+        snippet: {
+          ...item.snippet,
+          liveBroadcastContent: detail.snippet?.liveBroadcastContent || item.snippet?.liveBroadcastContent,
+        },
+      };
+    }
+    return item;
+  });
 };
