@@ -19,15 +19,33 @@ const VideoDetail = () => {
     return saved !== null ? JSON.parse(saved) : true;
   });
   const [countdown, setCountdown] = useState(null);
+  
   const timerRef = useRef(null);
+  const autoplayRef = useRef(autoplay);
+  const nextVideoRef = useRef(null);
+  const hasTriggeredEndedRef = useRef(false);
   const { id } = useParams();
 
-  // Find next video from related videos list (first item with a videoId)
+  // Find next video from related videos list
   const nextVideoItem = videos?.find(
-    (item) => item.id?.videoId && item.id.videoId !== id
+    (item) => {
+      const itemVid = item.id?.videoId || (typeof item.id === "string" ? item.id : null);
+      return itemVid && itemVid !== id;
+    }
   );
 
+  const nextVideoId = nextVideoItem?.id?.videoId || (typeof nextVideoItem?.id === "string" ? nextVideoItem.id : null);
+
   useEffect(() => {
+    autoplayRef.current = autoplay;
+  }, [autoplay]);
+
+  useEffect(() => {
+    nextVideoRef.current = nextVideoItem;
+  }, [nextVideoItem]);
+
+  useEffect(() => {
+    hasTriggeredEndedRef.current = false;
     setCountdown(null);
     if (timerRef.current) {
       clearTimeout(timerRef.current);
@@ -51,8 +69,9 @@ const VideoDetail = () => {
     if (countdown === null) return;
 
     if (countdown <= 0) {
-      if (nextVideoItem?.id?.videoId) {
-        navigate(`/video/${nextVideoItem.id.videoId}`);
+      const targetId = nextVideoRef.current?.id?.videoId || (typeof nextVideoRef.current?.id === "string" ? nextVideoRef.current.id : null) || nextVideoId;
+      if (targetId) {
+        navigate(`/video/${targetId}`);
       }
       setCountdown(null);
       return;
@@ -65,11 +84,12 @@ const VideoDetail = () => {
     return () => {
       if (timerRef.current) clearTimeout(timerRef.current);
     };
-  }, [countdown, nextVideoItem, navigate]);
+  }, [countdown, nextVideoId, navigate]);
 
   const handleAutoplayToggle = (e) => {
     const isChecked = e.target.checked;
     setAutoplay(isChecked);
+    autoplayRef.current = isChecked;
     localStorage.setItem("visionhub_autoplay", JSON.stringify(isChecked));
     if (!isChecked && countdown !== null) {
       cancelAutoplay();
@@ -78,6 +98,7 @@ const VideoDetail = () => {
 
   const cancelAutoplay = () => {
     setCountdown(null);
+    hasTriggeredEndedRef.current = false;
     if (timerRef.current) {
       clearTimeout(timerRef.current);
       timerRef.current = null;
@@ -85,15 +106,32 @@ const VideoDetail = () => {
   };
 
   const playNextVideoNow = () => {
-    if (nextVideoItem?.id?.videoId) {
+    const targetId = nextVideoRef.current?.id?.videoId || (typeof nextVideoRef.current?.id === "string" ? nextVideoRef.current.id : null) || nextVideoId;
+    if (targetId) {
       cancelAutoplay();
-      navigate(`/video/${nextVideoItem.id.videoId}`);
+      navigate(`/video/${targetId}`);
+    }
+  };
+
+  const triggerAutoplay = () => {
+    if (hasTriggeredEndedRef.current) return;
+    const targetVideo = nextVideoRef.current || nextVideoItem;
+    const targetId = targetVideo?.id?.videoId || (typeof targetVideo?.id === "string" ? targetVideo.id : null);
+    
+    if (autoplayRef.current && targetId) {
+      hasTriggeredEndedRef.current = true;
+      setCountdown(5);
     }
   };
 
   const handleVideoEnded = () => {
-    if (autoplay && nextVideoItem?.id?.videoId) {
-      setCountdown(5);
+    triggerAutoplay();
+  };
+
+  const handleProgress = (state) => {
+    // Fail-safe trigger when video completes > 99.5%
+    if (state.played >= 0.995 && !hasTriggeredEndedRef.current) {
+      triggerAutoplay();
     }
   };
 
@@ -153,6 +191,12 @@ const VideoDetail = () => {
             controls
             playing
             onEnded={handleVideoEnded}
+            onProgress={handleProgress}
+            config={{
+              youtube: {
+                playerVars: { autoplay: 1, rel: 0 }
+              }
+            }}
           />
 
           {/* YouTube-style Autoplay Countdown Overlay */}
