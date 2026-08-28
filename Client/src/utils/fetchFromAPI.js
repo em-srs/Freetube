@@ -2,22 +2,44 @@ import axios from 'axios';
 
 export const BASE_URL = 'https://youtube-v31.p.rapidapi.com';
 
-// Extract keys from environment (supports comma-separated string of multiple API keys)
-const rawKeys = process.env.REACT_APP_RAPID_API_KEY || '';
-const apiKeys = rawKeys.split(',').map(k => k.trim()).filter(Boolean);
+// Function to collect all available keys (Environment + User Custom Keys in localStorage)
+export const getApiKeysList = () => {
+  const envKeysRaw = process.env.REACT_APP_RAPID_API_KEY || '';
+  const customKeysRaw = localStorage.getItem('custom_rapid_api_key') || '';
+  
+  const combined = `${customKeysRaw},${envKeysRaw}`;
+  return combined
+    .split(',')
+    .map(k => k.trim())
+    .filter(Boolean);
+};
 
 let currentKeyIndex = 0;
 
 const getActiveApiKey = () => {
-  if (apiKeys.length === 0) return '';
-  return apiKeys[currentKeyIndex % apiKeys.length];
+  const keys = getApiKeysList();
+  if (keys.length === 0) return '';
+  return keys[currentKeyIndex % keys.length];
 };
 
-const CACHE_TTL_MS = 15 * 60 * 1000; // 15 minutes TTL
+export const setCustomApiKey = (keyString) => {
+  if (keyString) {
+    localStorage.setItem('custom_rapid_api_key', keyString.trim());
+  } else {
+    localStorage.removeItem('custom_rapid_api_key');
+  }
+  currentKeyIndex = 0;
+};
+
+export const getStoredCustomKey = () => {
+  return localStorage.getItem('custom_rapid_api_key') || '';
+};
+
+const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hour TTL
 
 const getCachedData = (cacheKey) => {
   try {
-    const cached = sessionStorage.getItem(`vh_cache_${cacheKey}`);
+    const cached = localStorage.getItem(`vh_cache_${cacheKey}`) || sessionStorage.getItem(`vh_cache_${cacheKey}`);
     if (cached) {
       const { timestamp, data } = JSON.parse(cached);
       if (Date.now() - timestamp < CACHE_TTL_MS) {
@@ -32,12 +54,18 @@ const getCachedData = (cacheKey) => {
 
 const setCachedData = (cacheKey, data) => {
   try {
-    sessionStorage.setItem(
+    localStorage.setItem(
       `vh_cache_${cacheKey}`,
       JSON.stringify({ timestamp: Date.now(), data })
     );
   } catch (e) {
-    // Ignore storage errors
+    // Fallback to sessionStorage if localStorage fails
+    try {
+      sessionStorage.setItem(
+        `vh_cache_${cacheKey}`,
+        JSON.stringify({ timestamp: Date.now(), data })
+      );
+    } catch (err) {}
   }
 };
 
@@ -113,6 +141,7 @@ export const fetchFromAPI = async (url, customParams = {}) => {
     return cachedResult;
   }
 
+  const apiKeys = getApiKeysList();
   const initialKeyIndex = currentKeyIndex;
   let attempts = 0;
   const maxAttempts = Math.max(1, apiKeys.length);
