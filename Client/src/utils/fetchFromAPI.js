@@ -41,6 +41,71 @@ const setCachedData = (cacheKey, data) => {
   }
 };
 
+const FALLBACK_VIDEOS = {
+  items: [
+    {
+      id: { videoId: "GDa8kZLNhJ4" },
+      snippet: {
+        title: "Build and Deploy a Full Stack React YouTube Clone Application",
+        channelTitle: "JavaScript Mastery",
+        channelId: "UCmXmlB4-HJytD7wek0Uo97A",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/GDa8kZLNhJ4/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT1H45M10S" }
+    },
+    {
+      id: { videoId: "bMknfKXIFA8" },
+      snippet: {
+        title: "React Course - Beginner's Tutorial for Web Development 2026",
+        channelTitle: "FreeCodeCamp",
+        channelId: "UC8butISFwT-Wl7EV0hUK0BQ",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/bMknfKXIFA8/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT5H10M00S" }
+    },
+    {
+      id: { videoId: "9bZkp7q19f0" },
+      snippet: {
+        title: "PSY - GANGNAM STYLE (강남스타일) M/V",
+        channelTitle: "Official PSY",
+        channelId: "UCrDkAvF_tYj1",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/9bZkp7q19f0/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT4M13S" }
+    },
+    {
+      id: { videoId: "kJQP7kiw5Fk" },
+      snippet: {
+        title: "Luis Fonsi - Despacito ft. Daddy Yankee",
+        channelTitle: "Luis Fonsi",
+        channelId: "UCxo1M304Y8V3Q2a488g",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/kJQP7kiw5Fk/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT4M42S" }
+    },
+    {
+      id: { videoId: "fJ9rUzIMcZQ" },
+      snippet: {
+        title: "Queen – Bohemian Rhapsody (Official Video Remastered)",
+        channelTitle: "Queen Official",
+        channelId: "UCG8rbF3g2AMX70yOd8vqIZg",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/fJ9rUzIMcZQ/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT6M00S" }
+    },
+    {
+      id: { videoId: "L_LUpnjgPso" },
+      snippet: {
+        title: "Top Coding Projects to Build in 2026 #shorts",
+        channelTitle: "Tech Shorts",
+        channelId: "UC12345",
+        thumbnails: { high: { url: "https://i.ytimg.com/vi/L_LUpnjgPso/hqdefault.jpg" } }
+      },
+      contentDetails: { duration: "PT45S" }
+    }
+  ]
+};
+
 export const fetchFromAPI = async (url, customParams = {}) => {
   const cacheKey = `${url}_${JSON.stringify(customParams)}`;
   const cachedResult = getCachedData(cacheKey);
@@ -67,7 +132,7 @@ export const fetchFromAPI = async (url, customParams = {}) => {
 
     try {
       const { data } = await axios.get(`${BASE_URL}/${url}`, options);
-      if (data) {
+      if (data && data.items) {
         setCachedData(cacheKey, data);
         return data;
       }
@@ -89,5 +154,5 @@ export const fetchFromAPI = async (url, customParams = {}) => {
   }
 
   const staleData = getCachedData(cacheKey);
-  return staleData || { items: [] };
+  return staleData || FALLBACK_VIDEOS;
 };

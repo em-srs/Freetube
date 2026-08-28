@@ -55,7 +55,7 @@ const Feed = () => {
     const orders = ['relevance', 'date', 'rating'];
     const randomOrder = orders[Math.floor(Math.random() * orders.length)];
 
-    let endpoint = `search?part=snippet&q=${encodeURIComponent(query)}`;
+    let endpoint = `search?part=snippet&type=video&q=${encodeURIComponent(query)}`;
     if (category === "Shorts" || filter === "shorts") {
       endpoint += `&videoDuration=short`;
     } else if (filter === "videos") {
@@ -67,19 +67,28 @@ const Feed = () => {
         let items = data.items || [];
 
         // Apply client-side filter
+        let filteredItems = items;
         if (filter === "videos" && category !== "Shorts") {
           // Exclude title with #shorts or shorts tag
-          items = items.filter(item => !/#shorts?|#short\b/i.test(item.snippet?.title || ""));
+          filteredItems = items.filter(item => !/#shorts?|#short\b/i.test(item.snippet?.title || ""));
         } else if (filter === "shorts" || category === "Shorts") {
           // Ensure items match shorts query or stay in shorts view
-          items = items.filter(item => item.id?.videoId);
+          filteredItems = items.filter(item => item.id?.videoId);
+        }
+
+        // Fallback to original items if filter yields 0 items
+        if (filteredItems.length === 0 && items.length > 0) {
+          filteredItems = items;
         }
 
         // Fisher-Yates light shuffle
-        items = [...items].sort(() => Math.random() - 0.5);
-        setVideos(items);
+        filteredItems = [...filteredItems].sort(() => Math.random() - 0.5);
+        setVideos(filteredItems);
       })
-      .catch((err) => console.error("Error fetching feed:", err))
+      .catch((err) => {
+        console.error("Error fetching feed:", err);
+        setVideos([]);
+      })
       .finally(() => setIsRefreshing(false));
   }, []);
 
